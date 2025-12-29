@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 /* -------------------------------------------------------------------------- */
-/* MONEYMIRROR v27.5 - CENTERED LAYOUT & SIZING FIX                           */
+/* MONEYMIRROR v27.6 - MOBILE TOP GAP FIX                                     */
 /* -------------------------------------------------------------------------- */
 
 // --- CONFIGURATION ---
@@ -78,22 +78,19 @@ export default function App() {
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
-        /* --- LAYOUT ARCHITECTURE --- */
+        /* --- LAYOUT ARCHITECTURE (FIXED) --- */
         
-        /* 1. The Void (Outer Container) */
-        /* This ensures strict centering on Desktop */
+        /* 1. Mobile First (Default) */
+        /* We DO NOT display flex here. Just a normal block that fills the screen. */
         .app-outer {
-          width: 100vw;
-          height: 100dvh;
+          width: 100%;
+          height: 100dvh; /* Fill mobile screen exactly */
           background: #020617;
-          display: flex;
-          align-items: center;
-          justify-content: center;
           position: relative;
           overflow: hidden;
         }
 
-        /* 2. The Phone (Mobile Frame) */
+        /* The app content fills the outer container perfectly on mobile */
         .mobile-frame {
           width: 100%;
           height: 100%;
@@ -106,8 +103,16 @@ export default function App() {
           overflow-x: hidden;
         }
 
-        /* Desktop Specifics: Transform into a "Phone" */
+        /* 2. Desktop Overrides (Min-width: 768px) */
+        /* Only enable the "Centered Phone" look on larger screens */
         @media (min-width: 768px) {
+          .app-outer {
+            display: flex; /* Turn on centering ONLY for desktop */
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+          }
+          
           .mobile-frame {
             width: 400px;
             height: 800px;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 /* -------------------------------------------------------------------------- */
-/* MONEYMIRROR v27.2 - SCROLLBAR HIDDEN FIX                                   */
+/* MONEYMIRROR v27.4 - LAYOUT STABILITY FIX                                   */
 /* -------------------------------------------------------------------------- */
 
 // --- CONFIGURATION ---
@@ -59,10 +59,11 @@ export default function App() {
   };
 
   return (
-    <div style={styles.body}>
+    // We use a CSS class 'app-outer' to handle the centering logic
+    <div className="app-outer">
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; color: white; background: #0a0f22ff; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; color: white; background: #020617; overflow-x: hidden; }
         .font-heading { font-family: 'Outfit', sans-serif; }
         
         /* ANIMATIONS */
@@ -75,13 +76,54 @@ export default function App() {
         .list-item-anim { opacity: 0; animation: slideIn 0.3s ease-out forwards; will-change: transform, opacity; }
         .float-anim { animation: float 5s ease-in-out infinite; will-change: transform; }
         
-        /* SCROLLBAR HIDING (FIXED) */
+        /* UTILS */
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
-        
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+        /* --- LAYOUT LOGIC (CRITICAL FIX) --- */
         
-        /* BACKGROUND */
+        /* 1. Base Mobile Styles (Default) */
+        .app-outer {
+          width: 100%;
+          min-height: 100vh;
+          position: relative;
+        }
+        
+        .mobile-frame {
+          width: 100%;
+          min-height: 100vh;
+          background: rgba(2, 6, 23, 0.95);
+          backdrop-filter: blur(25px);
+          display: flex;
+          flex-direction: column;
+          position: relative;
+          z-index: 10;
+        }
+
+        /* 2. Desktop Styles (Only applies if screen is wide) */
+        @media (min-width: 768px) {
+          .app-outer {
+            display: flex; /* Turn on Flexbox to center */
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden; /* Prevent body scroll on desktop */
+          }
+
+          .mobile-frame {
+            width: 420px; /* Fixed Phone Width */
+            height: 850px; /* Fixed Phone Height */
+            min-height: auto; /* Reset mobile height */
+            max-height: 95vh;
+            border-radius: 40px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 50px 100px -20px rgba(0,0,0,0.9), 0 0 0 1px rgba(0,0,0,0.5);
+            overflow-y: auto; /* Allow scrolling INSIDE the phone */
+          }
+        }
+
+        /* BACKGROUND MESH */
         .bg-mesh {
           position: fixed;
           top: 0; left: 0; width: 100%; height: 100%;
@@ -89,14 +131,13 @@ export default function App() {
                       radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
                       radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
           background-size: cover;
-          z-index: -1;
+          z-index: 0;
         }
 
-        /* INTERACTIONS */
+        /* COMPONENT STYLES */
         .btn-core { cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; }
         .btn-core:hover { transform: translateY(-2px); filter: brightness(1.2); }
         .btn-core:active { transform: translateY(1px) scale(0.98); filter: brightness(0.9); }
-        
         .card-hover:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.2); transition: all 0.3s ease; background: rgba(255,255,255,0.05); }
         
         .input-glass {
@@ -111,24 +152,14 @@ export default function App() {
           background: rgba(15, 23, 42, 0.8);
           outline: none;
         }
-
-        @media (min-width: 768px) {
-          .mobile-frame {
-            width: 450px;
-            height: 900px;
-            max-height: 95vh;
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 40px;
-            box-shadow: 0 50px 100px -20px rgba(0,0,0,0.9), 0 0 0 1px rgba(0,0,0,0.5);
-            overflow: hidden;
-            position: relative;
-          }
-        }
       `}</style>
 
       <div className="bg-mesh"></div>
       
-      <div className="mobile-frame hide-scroll" style={styles.mainContainer}>
+      {/* REMOVED INLINE WIDTH/HEIGHT STYLES 
+         Letting the CSS class 'mobile-frame' handle layout entirely 
+      */}
+      <div className="mobile-frame hide-scroll">
         {showLanding ? (
           <LandingPage onFinish={handleCompleteOnboarding} />
         ) : (
@@ -290,7 +321,6 @@ function CoreApp({ userName }) {
   const handleKeyDown = (e) => { if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault(); };
 
   return (
-    // ADDED hide-scroll CLASS HERE
     <div className="anim-enter hide-scroll" style={styles.coreContainer}>
       
       {/* HEADER */}
@@ -351,13 +381,12 @@ function CoreApp({ userName }) {
               </div>
               <input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Description (e.g. Lunch)" className="input-glass" style={styles.inputText} />
               
-              {/* FIXED CATEGORY CHIPS */}
+              {/* CATEGORY CHIPS */}
               <div style={styles.chipScroll} className="hide-scroll">
                 {currentCategories.map(c => (
                   <button 
                     key={c.name} 
                     onClick={() => setCategory(c.name)} 
-                    // ADDED BACKGROUND FOR ALIVE EFFECT
                     style={category === c.name ? {...styles.chip, ...styles.chipActive, borderColor:c.color, color:c.color} : styles.chip} 
                     className="btn-core"
                   >
@@ -404,7 +433,6 @@ function CoreApp({ userName }) {
                 <button onClick={addGoal} style={styles.gridAddBtn} className="btn-core">+</button>
               </div>
               <div style={styles.goalGrid}>
-                {/* FIXED: Planner map safety check */}
                 {(goals || []).map(g => {
                    const progress = Math.min(100, (g.saved / g.target) * 100);
                    return (
@@ -428,7 +456,6 @@ function CoreApp({ userName }) {
                 <input placeholder="₹" type="number" value={subCost} onChange={e=>setSubCost(e.target.value)} onWheel={preventScroll} className="input-glass" style={styles.gridInput} />
                 <button onClick={addSubscription} style={styles.gridAddBtn} className="btn-core">+</button>
               </div>
-              {/* FIXED: Subscription map safety check */}
               {(subscriptions || []).map(s => (
                 <div key={s.id} style={styles.subItem}>
                   <div style={{display:'flex', gap:'10px', alignItems:'center'}}><div style={styles.dot}></div><span>{s.name}</span></div>
@@ -464,14 +491,10 @@ function CoreApp({ userName }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* STYLES                                                                     */
+/* STYLES (PURE VISUAL ONLY, LAYOUT IS IN CSS NOW)                            */
 /* -------------------------------------------------------------------------- */
 
 const styles = {
-  // GLOBAL
-  body: { minHeight: "100vh", color: "#fff" },
-  mainContainer: { width: "100%", maxWidth: "500px", minHeight: "100vh", background: "rgba(2, 6, 23, 0.8)", backdropFilter: "blur(25px)", display: "flex", flexDirection: "column", boxShadow: "0 0 80px rgba(0,0,0,0.8)", margin: "0 auto" },
-  
   // LANDING
   landingScroll: { height: "100%", overflowY: "auto", padding: "40px 24px", display: "flex", flexDirection: "column", alignItems: "center" },
   navHeader: { width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "50px" },
@@ -497,7 +520,7 @@ const styles = {
   trustFooter: { textAlign: "center", paddingBottom: "20px", color: "#475569" },
 
   // SETUP
-  fullCenter: { width: "100%", minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center", padding: "20px" },
+  fullCenter: { width: "100%", minHeight: "100%", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "20px" },
   setupCard: { background: "rgba(15, 23, 42, 0.8)", backdropFilter: "blur(30px)", padding: "40px 30px", borderRadius: "32px", width: "100%", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 60px rgba(0,0,0,0.4)" },
   progressBar: { height: "4px", background: "#1e293b", borderRadius: "2px", marginBottom: "30px", overflow: "hidden" },
   progressFill: { height: "100%", background: "#10b981", borderRadius: "2px" },
@@ -546,30 +569,9 @@ const styles = {
   gridInput: { width: "100%", height: "100%", padding: "0 16px", borderRadius: "16px", color: "#fff", fontSize: "14px", outline: "none" },
   gridAddBtn: { width: "100%", height: "100%", background: "#1e293b", color: "#fff", border: "1px solid #334155", borderRadius: "16px", fontSize: "24px", display: "flex", alignItems: "center", justifyContent: "center" },
 
-  // FIXED: Category Chips (Alive & Unsquashed)
   chipScroll: { display: "flex", gap: "10px", overflowX: "auto", padding: "10px 4px" },
-  chip: { 
-    flexShrink: 0, 
-    minWidth: "max-content", 
-    padding: "10px 20px", 
-    borderRadius: "20px", 
-    background: "rgba(255,255,255,0.1)", // Alive background
-    border: "1px solid #334155", 
-    color: "#94a3b8", 
-    fontSize: "13px", 
-    fontWeight: "500",
-    transition: "all 0.2s"
-  },
-  chipActive: { 
-    flexShrink: 0, 
-    minWidth: "max-content", 
-    padding: "10px 20px", 
-    borderRadius: "20px", 
-    background: "#fff", 
-    border: "1px solid #fff", 
-    color: "#000", 
-    fontWeight: "700" 
-  },
+  chip: { flexShrink: 0, minWidth: "max-content", padding: "10px 20px", borderRadius: "20px", background: "rgba(255,255,255,0.1)", border: "1px solid #334155", color: "#94a3b8", fontSize: "13px", fontWeight: "500", transition: "all 0.2s" },
+  chipActive: { flexShrink: 0, minWidth: "max-content", padding: "10px 20px", borderRadius: "20px", background: "#fff", border: "1px solid #fff", color: "#000", fontWeight: "700" },
   
   actionBtn: { width: "100%", padding: "18px", background: "#fff", color: "#000", border: "none", borderRadius: "18px", fontSize: "16px", fontWeight: "700", marginTop: "8px" },
   updateBtn: { width: "100%", padding: "18px", background: "#f59e0b", color: "#000", border: "none", borderRadius: "18px", fontSize: "16px", fontWeight: "700", marginTop: "8px" },

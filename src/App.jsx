@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 /* -------------------------------------------------------------------------- */
-/* MONEYMIRROR v27.4 - LAYOUT STABILITY FIX                                   */
+/* MONEYMIRROR v27.5 - CENTERED LAYOUT & SIZING FIX                           */
 /* -------------------------------------------------------------------------- */
 
 // --- CONFIGURATION ---
@@ -59,86 +59,81 @@ export default function App() {
   };
 
   return (
-    // We use a CSS class 'app-outer' to handle the centering logic
     <div className="app-outer">
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; color: white; background: #020617; overflow-x: hidden; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; color: white; background: #000; overflow: hidden; /* Prevent double scrollbars */ }
         .font-heading { font-family: 'Outfit', sans-serif; }
         
         /* ANIMATIONS */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-6px); } 100% { transform: translateY(0px); } }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .anim-enter { animation: fadeIn 0.4s ease-out forwards; will-change: transform, opacity; }
         .list-item-anim { opacity: 0; animation: slideIn 0.3s ease-out forwards; will-change: transform, opacity; }
-        .float-anim { animation: float 5s ease-in-out infinite; will-change: transform; }
         
         /* UTILS */
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
-        /* --- LAYOUT LOGIC (CRITICAL FIX) --- */
+        /* --- LAYOUT ARCHITECTURE --- */
         
-        /* 1. Base Mobile Styles (Default) */
+        /* 1. The Void (Outer Container) */
+        /* This ensures strict centering on Desktop */
         .app-outer {
-          width: 100%;
-          min-height: 100vh;
+          width: 100vw;
+          height: 100dvh;
+          background: #020617;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           position: relative;
+          overflow: hidden;
         }
-        
+
+        /* 2. The Phone (Mobile Frame) */
         .mobile-frame {
           width: 100%;
-          min-height: 100vh;
-          background: rgba(2, 6, 23, 0.95);
-          backdrop-filter: blur(25px);
+          height: 100%;
+          background: rgba(15, 23, 42, 0.95);
           display: flex;
           flex-direction: column;
           position: relative;
           z-index: 10;
+          overflow-y: auto;
+          overflow-x: hidden;
         }
 
-        /* 2. Desktop Styles (Only applies if screen is wide) */
+        /* Desktop Specifics: Transform into a "Phone" */
         @media (min-width: 768px) {
-          .app-outer {
-            display: flex; /* Turn on Flexbox to center */
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden; /* Prevent body scroll on desktop */
-          }
-
           .mobile-frame {
-            width: 420px; /* Fixed Phone Width */
-            height: 850px; /* Fixed Phone Height */
-            min-height: auto; /* Reset mobile height */
-            max-height: 95vh;
+            width: 400px;
+            height: 800px;
+            max-height: 90vh;
             border-radius: 40px;
-            border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 50px 100px -20px rgba(0,0,0,0.9), 0 0 0 1px rgba(0,0,0,0.5);
-            overflow-y: auto; /* Allow scrolling INSIDE the phone */
+            border: 4px solid #1e293b;
+            box-shadow: 0 0 0 10px #0f172a, 0 50px 100px -20px rgba(0,0,0,0.9);
           }
         }
 
         /* BACKGROUND MESH */
         .bg-mesh {
-          position: fixed;
+          position: absolute;
           top: 0; left: 0; width: 100%; height: 100%;
           background: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
                       radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
                       radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
           background-size: cover;
           z-index: 0;
+          opacity: 0.6;
         }
 
         /* COMPONENT STYLES */
         .btn-core { cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; }
         .btn-core:hover { transform: translateY(-2px); filter: brightness(1.2); }
         .btn-core:active { transform: translateY(1px) scale(0.98); filter: brightness(0.9); }
-        .card-hover:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.2); transition: all 0.3s ease; background: rgba(255,255,255,0.05); }
         
         .input-glass {
           background: rgba(15, 23, 42, 0.6);
@@ -156,9 +151,6 @@ export default function App() {
 
       <div className="bg-mesh"></div>
       
-      {/* REMOVED INLINE WIDTH/HEIGHT STYLES 
-         Letting the CSS class 'mobile-frame' handle layout entirely 
-      */}
       <div className="mobile-frame hide-scroll">
         {showLanding ? (
           <LandingPage onFinish={handleCompleteOnboarding} />
@@ -243,7 +235,7 @@ function LandingPage({ onFinish }) {
         <p style={styles.heroDesc}>Private expense tracker Income and Expenses.<br/><strong>No Bank Link.No Account. No Cloud.</strong></p>
         <button onClick={() => setStep(2)} style={styles.glowBtn} className="btn-core">TAP TO GET IN</button>
       </div>
-      <div style={styles.demoContainer} className="float-anim">
+      <div style={styles.demoContainer}>
         <div style={styles.glassGraphic}>
           <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'12px'}}>
             <div style={{fontSize:'12px', color:'#1fc8b7', fontWeight:'700', letterSpacing:'1px'}}>LIVE BALANCE</div>
@@ -491,7 +483,7 @@ function CoreApp({ userName }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* STYLES (PURE VISUAL ONLY, LAYOUT IS IN CSS NOW)                            */
+/* STYLES                                                                     */
 /* -------------------------------------------------------------------------- */
 
 const styles = {
@@ -519,8 +511,8 @@ const styles = {
   featText: { fontSize: "12px", color: "#94a3b8", lineHeight: "1.4" },
   trustFooter: { textAlign: "center", paddingBottom: "20px", color: "#475569" },
 
-  // SETUP
-  fullCenter: { width: "100%", minHeight: "100%", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "20px" },
+  // SETUP - FIXED (Removed 100vh constraint)
+  fullCenter: { width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "20px" },
   setupCard: { background: "rgba(15, 23, 42, 0.8)", backdropFilter: "blur(30px)", padding: "40px 30px", borderRadius: "32px", width: "100%", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 60px rgba(0,0,0,0.4)" },
   progressBar: { height: "4px", background: "#1e293b", borderRadius: "2px", marginBottom: "30px", overflow: "hidden" },
   progressFill: { height: "100%", background: "#10b981", borderRadius: "2px" },

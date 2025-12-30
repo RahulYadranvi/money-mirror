@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 /* -------------------------------------------------------------------------- */
-/* MONEYMIRROR v27.6 - FIXED TOP GAP (MOBILE ALIGNMENT)                       */
+/* MONEYMIRROR v27.7 - STRICT MOBILE FULLSCREEN (NO GAPS)                     */
 /* -------------------------------------------------------------------------- */
 
 // --- CONFIGURATION ---
@@ -61,8 +61,8 @@ export default function App() {
   return (
     <div className="app-outer">
       <style>{`
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; color: white; background: #000; overflow: hidden; /* Prevent double scrollbars */ }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; color: white; background: #020617; overscroll-behavior: none; }
         .font-heading { font-family: 'Outfit', sans-serif; }
         
         /* ANIMATIONS */
@@ -78,48 +78,32 @@ export default function App() {
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
-        /* --- LAYOUT ARCHITECTURE --- */
+        /* --- LAYOUT ARCHITECTURE (STRICT MOBILE) --- */
         
-        /* 1. The Void (Outer Container) */
+        /* 1. Main Container - Locked to Viewport */
         .app-outer {
+          position: fixed; /* Forces app to stick to edges, no gaps */
+          top: 0; 
+          left: 0; 
           width: 100vw;
-          height: 100dvh;
+          height: 100%; /* Fallback */
+          height: 100dvh; /* Dynamic viewport height */
           background: #020617;
-          display: flex;
-          /* FIX: Removed center alignment for mobile to prevent top gap */
-          flex-direction: column; 
-          position: relative;
           overflow: hidden;
+          z-index: 1;
         }
 
-        /* 2. The Phone (Mobile Frame) */
+        /* 2. Content Scroll Area */
         .mobile-frame {
           width: 100%;
           height: 100%;
-          background: rgba(15, 23, 42, 0.95);
+          background: rgba(15, 23, 42, 0.96); /* Slightly more opaque for readability */
           display: flex;
           flex-direction: column;
           position: relative;
-          z-index: 10;
+          z-index: 2;
           overflow-y: auto;
           overflow-x: hidden;
-        }
-
-        /* Desktop Specifics: Transform into a "Phone" */
-        @media (min-width: 768px) {
-          .app-outer {
-            /* Restore centering ONLY for desktop */
-            align-items: center;
-            justify-content: center;
-          }
-          .mobile-frame {
-            width: 400px;
-            height: 800px;
-            max-height: 90vh;
-            border-radius: 40px;
-            border: 4px solid #1e293b;
-            box-shadow: 0 0 0 10px #0f172a, 0 50px 100px -20px rgba(0,0,0,0.9);
-          }
         }
 
         /* BACKGROUND MESH */
@@ -135,9 +119,8 @@ export default function App() {
         }
 
         /* COMPONENT STYLES */
-        .btn-core { cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; }
-        .btn-core:hover { transform: translateY(-2px); filter: brightness(1.2); }
-        .btn-core:active { transform: translateY(1px) scale(0.98); filter: brightness(0.9); }
+        .btn-core { cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; touch-action: manipulation; }
+        .btn-core:active { transform: scale(0.96); filter: brightness(0.9); }
         
         .input-glass {
           background: rgba(15, 23, 42, 0.6);
@@ -491,8 +474,16 @@ function CoreApp({ userName }) {
 /* -------------------------------------------------------------------------- */
 
 const styles = {
-  // LANDING
-  landingScroll: { height: "100%", overflowY: "auto", padding: "40px 24px", display: "flex", flexDirection: "column", alignItems: "center" },
+  // LANDING - REDUCED PADDING
+  landingScroll: { 
+    height: "100%", 
+    overflowY: "auto", 
+    padding: "0 24px 40px 24px", // Removed top padding here, handled below
+    paddingTop: "max(24px, env(safe-area-inset-top))", // DYNAMIC NOTCH SUPPORT
+    display: "flex", 
+    flexDirection: "column", 
+    alignItems: "center" 
+  },
   navHeader: { width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "50px" },
   logoPill: { fontSize: "20px", fontWeight: "800", color: "#fff", letterSpacing: "-0.5px" },
   statusPill: { fontSize: "11px", fontWeight: "700", color: "#34d399", background: "rgba(52, 211, 153, 0.1)", padding: "6px 10px", borderRadius: "10px", border: "1px solid rgba(52, 211, 153, 0.2)" },
@@ -515,7 +506,7 @@ const styles = {
   featText: { fontSize: "12px", color: "#94a3b8", lineHeight: "1.4" },
   trustFooter: { textAlign: "center", paddingBottom: "20px", color: "#475569" },
 
-  // SETUP - FIXED (Removed 100vh constraint)
+  // SETUP
   fullCenter: { width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "20px" },
   setupCard: { background: "rgba(15, 23, 42, 0.8)", backdropFilter: "blur(30px)", padding: "40px 30px", borderRadius: "32px", width: "100%", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 60px rgba(0,0,0,0.4)" },
   progressBar: { height: "4px", background: "#1e293b", borderRadius: "2px", marginBottom: "30px", overflow: "hidden" },
@@ -532,7 +523,15 @@ const styles = {
   loader: { width: "50px", height: "50px", border: "4px solid rgba(52, 211, 153, 0.1)", borderTop: "4px solid #34d399", borderRadius: "50%", margin: "0 auto", animation: "spin 1s linear infinite" },
 
   // CORE APP
-  coreContainer: { width: "100%", height: "100%", display: "flex", flexDirection: "column", padding: "20px", overflowY: "auto" },
+  coreContainer: { 
+    width: "100%", 
+    height: "100%", 
+    display: "flex", 
+    flexDirection: "column", 
+    padding: "0 20px", 
+    paddingTop: "max(24px, env(safe-area-inset-top))", // DYNAMIC NOTCH SUPPORT
+    overflowY: "auto" 
+  },
   header: { display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px" },
   date: { fontSize: "12px", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "1px", fontWeight: "700" },
   welcome: { fontSize: "26px", fontWeight: "800", letterSpacing: "-0.5px" },

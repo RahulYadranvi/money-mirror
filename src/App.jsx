@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 /* -------------------------------------------------------------------------- */
-/* MONEYMIRROR v27.5 - CENTERED LAYOUT & SIZING FIX                           */
+/* MONEYMIRROR v27.6 - FIXED TOP GAP (MOBILE ALIGNMENT)                       */
 /* -------------------------------------------------------------------------- */
 
 // --- CONFIGURATION ---
@@ -81,14 +81,13 @@ export default function App() {
         /* --- LAYOUT ARCHITECTURE --- */
         
         /* 1. The Void (Outer Container) */
-        /* This ensures strict centering on Desktop */
         .app-outer {
           width: 100vw;
           height: 100dvh;
           background: #020617;
           display: flex;
-          align-items: center;
-          justify-content: center;
+          /* FIX: Removed center alignment for mobile to prevent top gap */
+          flex-direction: column; 
           position: relative;
           overflow: hidden;
         }
@@ -108,6 +107,11 @@ export default function App() {
 
         /* Desktop Specifics: Transform into a "Phone" */
         @media (min-width: 768px) {
+          .app-outer {
+            /* Restore centering ONLY for desktop */
+            align-items: center;
+            justify-content: center;
+          }
           .mobile-frame {
             width: 400px;
             height: 800px;
